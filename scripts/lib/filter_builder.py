@@ -22,6 +22,9 @@ from typing import Any
 
 NAF_PROPERTY = "libelle_code_naf"
 DEPT_PROPERTY = "departement_code"
+VEHICLES_PROPERTY = "data___calc__nb_vehicles"
+VEHICLES_MIN = 10
+VEHICLES_MAX = 250
 
 
 def _bucket_filters(
@@ -56,6 +59,32 @@ def _bucket_filters(
             }
         )
     return filters
+
+
+def _vehicles_filters() -> list[dict[str, Any]]:
+    """Filtre nb véhicules entre VEHICLES_MIN et VEHICLES_MAX (inclus)."""
+    return [
+        {
+            "filterType": "PROPERTY",
+            "property": VEHICLES_PROPERTY,
+            "operation": {
+                "operator": "IS_GREATER_THAN_OR_EQUAL_TO",
+                "operationType": "NUMBER",
+                "value": VEHICLES_MIN,
+                "includeObjectsWithNoValueSet": False,
+            },
+        },
+        {
+            "filterType": "PROPERTY",
+            "property": VEHICLES_PROPERTY,
+            "operation": {
+                "operator": "IS_LESS_THAN_OR_EQUAL_TO",
+                "operationType": "NUMBER",
+                "value": VEHICLES_MAX,
+                "includeObjectsWithNoValueSet": False,
+            },
+        },
+    ]
 
 
 def _empty_and_branch() -> dict[str, Any]:
@@ -107,8 +136,10 @@ def build_dnf_with_buckets(
         master_subbranches = list(master_and.get("filterBranches", []))
 
         for bucket in buckets:
-            merged_filters = copy.deepcopy(master_filters) + _bucket_filters(
-                bucket["naf_libelle"], bucket.get("departements")
+            merged_filters = (
+                copy.deepcopy(master_filters)
+                + _bucket_filters(bucket["naf_libelle"], bucket.get("departements"))
+                + _vehicles_filters()
             )
             distributed.append(
                 {
