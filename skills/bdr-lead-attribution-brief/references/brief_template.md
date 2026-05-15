@@ -4,6 +4,8 @@ Use this EXACT structure when rendering the final brief.
 
 ---
 
+# [Week {YYYY-MM-DD}] Lead Attribution Report
+
 ## 📊 1. État des pipelines
 
 | {sales_rep_role} | Stock actuel | Cible | À attribuer |
