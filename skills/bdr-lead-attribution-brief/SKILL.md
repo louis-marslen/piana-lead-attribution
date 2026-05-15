@@ -135,7 +135,7 @@ Read the `total`. This is the bucket's estimated volume.
 
 Sort candidate buckets by relevance (number of wins for that libellé) and by volume.
 
-Greedy selection: pick buckets until the cumulative **estimated** volume reaches ~3× the total leads needed. The pre-check estimates are ~2-2.5× higher than reality (due to the 6-filter limit), so aiming for 3× estimated ≈ 1.2-1.5× actual.
+Greedy selection: pick buckets by conviction until you have a reasonable set. The pre-check volumes are approximate (overestimated due to the 6-filter limit) — they're only useful to avoid selecting empty buckets. The real volume check happens after list creation (Step 10d).
 
 If no individual bucket reaches enough volume, broaden the geographic scope (department → region → national) for the highest-conviction libellés.
 
@@ -227,7 +227,7 @@ Authorization: Bearer <HUBSPOT_TOKEN>
 
 Read the `listSize` (or `size`) field from the response. This is the **real** total volume.
 
-**If `listSize` < total leads needed** (from Step 3), the list is insufficient. Loop:
+**If `listSize` < 1.2× total leads needed** (from Step 3), the list is insufficient. Loop:
 
 1. Go back to the remaining candidate buckets from Step 8 that were NOT selected in Step 9.
 2. If no candidates left, broaden: take the top NAFs by volume from existing buckets and widen their geo scope (regional → national), or add new single-win NAFs with high volume.
