@@ -147,30 +147,42 @@ Create the list by calling the HubSpot Lists API directly via `WebFetch`. No loc
 
 The list uses a DNF (OR of ANDs) structure: `master_filters AND bucket_filters` for each bucket, OR'd together.
 
-The master filter branch (from list `3584`) contains these filters (AND'd):
-- `proprietaire_prospection` IS_UNKNOWN
-- `statut_de_prospection` IS_UNKNOWN
-- `siret_2` IS_KNOWN
-- `address` IS_KNOWN
-- `city` IS_KNOWN
-- `zip` IS_KNOWN
-- `data___calc__nb_vehicles` IS_KNOWN
-- `ready_tbc` IS_EQUAL_TO 1.0 (NUMBER)
-- `company_nb_open_leads` IS_LESS_THAN 1.0 (NUMBER, includeObjectsWithNoValueSet: true)
-- `num_associated_deals` IS_LESS_THAN 1.0 (NUMBER, includeObjectsWithNoValueSet: true)
+The master filters (AND'd) — use these EXACT JSON objects, do NOT change the operationType values:
 
-For each bucket, append these filters to the master AND branch:
-- NAF filter: `filterType: "PROPERTY"`, `property: "libelle_code_naf"`, `operation: { operator: "IS_EQUAL_TO", operationType: "MULTISTRING", values: ["<exact libellé>"], includeObjectsWithNoValueSet: false }`
-- Dept filter (if not national): `filterType: "PROPERTY"`, `property: "departement_code"`, `operation: { operator: "IS_ANY_OF", operationType: "ENUMERATION", values: [<dept codes without leading zeros>], includeObjectsWithNoValueSet: false }`
+```json
+[
+  {"filterType":"PROPERTY","property":"proprietaire_prospection","operation":{"operator":"IS_UNKNOWN","operationType":"ALL_PROPERTY","includeObjectsWithNoValueSet":false}},
+  {"filterType":"PROPERTY","property":"statut_de_prospection","operation":{"operator":"IS_UNKNOWN","operationType":"ALL_PROPERTY","includeObjectsWithNoValueSet":false}},
+  {"filterType":"PROPERTY","property":"siret_2","operation":{"operator":"IS_KNOWN","operationType":"ALL_PROPERTY","includeObjectsWithNoValueSet":false}},
+  {"filterType":"PROPERTY","property":"address","operation":{"operator":"IS_KNOWN","operationType":"ALL_PROPERTY","includeObjectsWithNoValueSet":false}},
+  {"filterType":"PROPERTY","property":"city","operation":{"operator":"IS_KNOWN","operationType":"ALL_PROPERTY","includeObjectsWithNoValueSet":false}},
+  {"filterType":"PROPERTY","property":"zip","operation":{"operator":"IS_KNOWN","operationType":"ALL_PROPERTY","includeObjectsWithNoValueSet":false}},
+  {"filterType":"PROPERTY","property":"data___calc__nb_vehicles","operation":{"operator":"IS_KNOWN","operationType":"ALL_PROPERTY","includeObjectsWithNoValueSet":false}},
+  {"filterType":"PROPERTY","property":"ready_tbc","operation":{"operator":"IS_EQUAL_TO","operationType":"NUMBER","value":1.0,"includeObjectsWithNoValueSet":false}},
+  {"filterType":"PROPERTY","property":"company_nb_open_leads","operation":{"operator":"IS_LESS_THAN","operationType":"NUMBER","value":1.0,"includeObjectsWithNoValueSet":true}},
+  {"filterType":"PROPERTY","property":"num_associated_deals","operation":{"operator":"IS_LESS_THAN","operationType":"NUMBER","value":1.0,"includeObjectsWithNoValueSet":true}}
+]
+```
 
-**Important:** Department codes in HubSpot have NO leading zeros (e.g. `"6"` not `"06"`, `"1"` not `"01"`).
+For each bucket, append these filters to the master array:
+- NAF filter: `{"filterType":"PROPERTY","property":"libelle_code_naf","operation":{"operator":"IS_EQUAL_TO","operationType":"MULTISTRING","values":["<exact libellé>"],"includeObjectsWithNoValueSet":false}}`
+- Dept filter (if not national): `{"filterType":"PROPERTY","property":"departement_code","operation":{"operator":"IS_ANY_OF","operationType":"ENUMERATION","values":["<dept codes>"],"includeObjectsWithNoValueSet":false}}`
 
-The root filterBranch is:
+**Important:** Department codes have NO leading zeros (`"6"` not `"06"`). Use `ALL_PROPERTY` for IS_KNOWN/IS_UNKNOWN — never OWNER or STRING.
+
+Each AND branch = master filters + bucket filters. The root filterBranch:
 ```json
 {
   "filterBranchType": "OR",
   "filterBranchOperator": "OR",
-  "filterBranches": [ <one AND branch per bucket, each containing master_filters + bucket_filters> ],
+  "filterBranches": [
+    {
+      "filterBranchType": "AND",
+      "filterBranchOperator": "AND",
+      "filterBranches": [],
+      "filters": [ ...master_filters, ...bucket_filters ]
+    }
+  ],
   "filters": []
 }
 ```
