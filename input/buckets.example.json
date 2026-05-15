@@ -1,0 +1,16 @@
+{
+  "buckets": [
+    {
+      "naf_libelle": "Transports routiers de fret interurbains",
+      "departements": ["31", "32", "81", "82", "65"]
+    },
+    {
+      "naf_libelle": "Manutention non portuaire",
+      "departements": ["31", "33", "44"]
+    },
+    {
+      "naf_libelle": "Entreposage et stockage non frigorifique",
+      "departements": null
+    }
+  ]
+}
