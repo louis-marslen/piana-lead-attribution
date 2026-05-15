@@ -217,7 +217,17 @@ Content-Type: application/json
 {"listId": "<listId>", "newFolderId": "1062490299"}
 ```
 
-#### 10d — Build the list URL
+#### 10d — Get the actual list size
+
+Wait a few seconds for HubSpot to process, then fetch the list:
+```
+GET https://api.hubapi.com/crm/v3/lists/<listId>
+Authorization: Bearer <HUBSPOT_TOKEN>
+```
+
+Read the `listSize` (or `size`) field from the response. This is the **real** total volume to display in the brief — not the pre-check estimates from Step 8.
+
+#### 10e — Build the list URL
 
 `https://app-eu1.hubspot.com/contacts/26080063/objectLists/<listId>`
 

@@ -16,15 +16,15 @@ Use this EXACT structure when rendering the final brief.
 
 ## 🎯 2. Liste HubSpot créée
 
-J'ai sélectionné {N} groupes NAF × géo ({ratio}× le besoin, ~{sum_volume} leads disponibles).
+J'ai sélectionné {N} groupes NAF × géo — **{list_size} leads** dans la liste.
 
 👉 **[Ouvrir la liste dans HubSpot]({hubspot_list_url})**
 
-| Groupe | Volume |
+| Groupe | Volume estimé |
 |---|---|
 | **{N} — {bucket_name}** | ~{volume} |
 | ... | ... |
-| **Total estimé** | **~{sum_volume}** |
+| **Taille réelle de la liste** | **{list_size}** |
 
 ---
 
@@ -42,4 +42,4 @@ J'ai sélectionné {N} groupes NAF × géo ({ratio}× le besoin, ~{sum_volume} l
 - `{sales_rep_role}` = "BDR" if all reps are BDRs, "Sales rep" if mixed (BDRs + AEs)
 - `{1.5x_total}` = round(total_to_assign * 1.5)
 - `{N}` = number of buckets kept
-- `{ratio}` = sum_volume / total_to_assign, rounded to 1 decimal
+- `{list_size}` = actual list size from HubSpot GET after creation (Step 10d) — this is the real number, not an estimate
