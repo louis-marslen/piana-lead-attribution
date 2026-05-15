@@ -135,7 +135,7 @@ Read the `total`. This is the bucket's estimated volume.
 
 Sort candidate buckets by relevance (number of wins for that libellé) and by volume.
 
-Greedy selection: pick buckets until the cumulative volume reaches ~1.5× the total leads needed (no more — the user explicitly wants a compact brief).
+Greedy selection: pick buckets until the cumulative **estimated** volume reaches ~3× the total leads needed. The pre-check estimates are ~2-2.5× higher than reality (due to the 6-filter limit), so aiming for 3× estimated ≈ 1.2-1.5× actual.
 
 If no individual bucket reaches enough volume, broaden the geographic scope (department → region → national) for the highest-conviction libellés.
 
@@ -217,7 +217,7 @@ Content-Type: application/json
 {"listId": "<listId>", "newFolderId": "1062490299"}
 ```
 
-#### 10d — Get the actual list size
+#### 10d — Get the actual list size and check if sufficient
 
 Wait a few seconds for HubSpot to process, then fetch the list:
 ```
@@ -225,7 +225,16 @@ GET https://api.hubapi.com/crm/v3/lists/<listId>
 Authorization: Bearer <HUBSPOT_TOKEN>
 ```
 
-Read the `listSize` (or `size`) field from the response. This is the **real** total volume to display in the brief — not the pre-check estimates from Step 8.
+Read the `listSize` (or `size`) field from the response. This is the **real** total volume.
+
+**If `listSize` < total leads needed** (from Step 3), the list is insufficient. Loop:
+
+1. Go back to the remaining candidate buckets from Step 8 that were NOT selected in Step 9.
+2. If no candidates left, broaden: take the top NAFs by volume from existing buckets and widen their geo scope (regional → national), or add new single-win NAFs with high volume.
+3. Delete the current list: `DELETE https://api.hubapi.com/crm/v3/lists/<listId>` with `Authorization: Bearer <HUBSPOT_TOKEN>`.
+4. Rebuild the filterBranch with the expanded bucket set (Steps 10a-10c).
+5. GET the new list size again.
+6. Repeat until `listSize` ≥ total leads needed. Max 3 iterations to avoid infinite loops — if still insufficient after 3 tries, proceed with what you have and flag it in the brief.
 
 #### 10e — Build the list URL
 
@@ -234,7 +243,7 @@ Read the `listSize` (or `size`) field from the response. This is the **real** to
 ### Step 11 — Render the brief
 
 Use the template in `skills/bdr-lead-attribution-brief/references/brief_template.md`. Section 2 now contains:
-- A summary of the buckets selected (count, total volume, ratio vs need)
+- The actual list size (from Step 10d) — this is the real number
 - The direct link to the HubSpot list just created
 
 ### Step 12 — Send to Slack
