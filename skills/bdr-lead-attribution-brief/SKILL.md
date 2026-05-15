@@ -97,22 +97,39 @@ For each libellé NAF present in the wins (excluding any explicitly excluded by 
 
 ### Step 8 — Estimate the volume of each bucket
 
-For each candidate bucket, call `HubSpot:search_crm_objects` on `companies` with:
+For each candidate bucket, call `HubSpot:search_crm_objects` on `companies` with the filters below.
+
+**HubSpot caps at 6 filters per filterGroup**, so pick the 6 most impactful from the master list + bucket filters.
+
+For **national buckets** (no dept filter) — 6 filters:
 ```
 filterGroups: [{ filters: [
-  { propertyName: "libelle_code_naf", operator: "IN", values: [<naf>] },
-  { propertyName: "departement_code", operator: "IN", values: [<depts>] },   // omit if national
+  { propertyName: "libelle_code_naf", operator: "EQ", value: "<naf>" },
   { propertyName: "ready_tbc", operator: "EQ", value: "1" },
-  { propertyName: "data___calc__nb_vehicles", operator: "GTE", value: "10" },
   { propertyName: "proprietaire_prospection", operator: "NOT_HAS_PROPERTY" },
+  { propertyName: "statut_de_prospection", operator: "NOT_HAS_PROPERTY" },
+  { propertyName: "siret_2", operator: "HAS_PROPERTY" },
+  { propertyName: "num_associated_deals", operator: "NOT_HAS_PROPERTY" }
+] }]
+limit: 1
+```
+
+For **geo buckets** (with dept filter) — 6 filters:
+```
+filterGroups: [{ filters: [
+  { propertyName: "libelle_code_naf", operator: "EQ", value: "<naf>" },
+  { propertyName: "departement_code", operator: "IN", values: [<depts>] },
+  { propertyName: "ready_tbc", operator: "EQ", value: "1" },
+  { propertyName: "proprietaire_prospection", operator: "NOT_HAS_PROPERTY" },
+  { propertyName: "statut_de_prospection", operator: "NOT_HAS_PROPERTY" },
   { propertyName: "siret_2", operator: "HAS_PROPERTY" }
 ] }]
 limit: 1
 ```
 
-Read the `total`. This is the bucket's volume.
+Read the `total`. This is the bucket's estimated volume.
 
-Note: HubSpot caps at 6 filters per filterGroup. The master criteria `lead_count = 0` and `num_associated_deals` unknown are part of the user's master list — they're applied implicitly. Don't add them to the test query unless you have room and they're missing from the user's pool.
+**Note:** The pre-check still omits some master filters (address/city/zip IS_KNOWN, company_nb_open_leads < 1) due to the 6-filter limit, so volumes will be slightly overestimated (~10-20%). This is expected.
 
 ### Step 9 — Select the minimal set of buckets reaching ~1.5× the target
 
