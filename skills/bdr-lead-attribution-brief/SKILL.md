@@ -92,7 +92,7 @@ For each libellé NAF present in the wins (excluding any explicitly excluded by 
 
 1. Collect the postal codes of the wins for that libellé.
 2. Extract the department code (`zip[:2]`, with the special case of Corsica `2A/2B` mapped to `20`).
-3. If the libellé has wins in at least 2 distinct departments → build a "NAF × geo" bucket. Departments to include: the ones with wins + adjacent ones in the same INSEE region (see `references/french_regions.md`).
+3. If the libellé has wins in at least 2 distinct departments → build a "NAF × geo" bucket. Departments to include: the ones with wins + adjacent ones in the same INSEE region (see `skills/bdr-lead-attribution-brief/references/french_regions.md`).
 4. If the libellé has wins in only 1 department (or 0 wins but is in the user's target NAF list) → either skip it OR include as a "national" bucket if its standalone volume is significant.
 
 ### Step 8 — Estimate the volume of each bucket
@@ -211,7 +211,7 @@ Content-Type: application/json
 
 ### Step 11 — Render the brief
 
-Use the template in `references/brief_template.md`. Section 2 now contains:
+Use the template in `skills/bdr-lead-attribution-brief/references/brief_template.md`. Section 2 now contains:
 - A summary of the buckets selected (count, total volume, ratio vs need)
 - The direct link to the HubSpot list just created
 
@@ -229,9 +229,9 @@ Then stop. Don't add commentary, analysis, or caveats unless the user explicitly
 
 ## Reference files
 
-- `references/hubspot_properties.md` — HubSpot property names, owner IDs format, common pitfalls (e.g., `ready_tbc` is `"1"` not `true`, `code_naf` not `naf_code`).
-- `references/french_regions.md` — Mapping of French INSEE regions to their constituent department codes (used to expand geographic scope).
-- `references/brief_template.md` — The exact markdown template for the final brief output.
+- `skills/bdr-lead-attribution-brief/references/hubspot_properties.md` — HubSpot property names, owner IDs format, common pitfalls (e.g., `ready_tbc` is `"1"` not `true`, `code_naf` not `naf_code`).
+- `skills/bdr-lead-attribution-brief/references/french_regions.md` — Mapping of French INSEE regions to their constituent department codes (used to expand geographic scope).
+- `skills/bdr-lead-attribution-brief/references/brief_template.md` — The exact markdown template for the final brief output.
 
 ## External dependencies
 
