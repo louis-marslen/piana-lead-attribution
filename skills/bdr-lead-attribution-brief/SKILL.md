@@ -35,8 +35,19 @@ Follow this sequence. Never skip a step.
 ### Step 1 — Capture parameters
 
 Ask the user (or infer from conversation) for:
-- **List of sales reps** (default: Adam Gruat, Nathan dellasantina, Rayane Sellal — the 3 current BDRs at Piana).
-- **Target pool size per rep** (default: 250). Each rep may have a different target — BDRs typically 250, AEs may have a higher target.
+- **List of sales reps** (default: the team below — 3 BDRs + 3 AEs at Piana). Each rep has a role and a target:
+
+  | Role | Name | Owner ID | Target |
+  |---|---|---|---|
+  | BDR | Adam Gruat | 33334662 | 250 |
+  | BDR | Nathan Dellasantina | 33371638 | 250 |
+  | BDR | Rayane Sellal | 32501903 | 250 |
+  | AE | Antoine Boccandé | 29804809 | 100 |
+  | AE | Déborah Kaise | 30154968 | 100 |
+  | AE | Djémaël Remion | 29506540 | 100 |
+
+  BDRs target 250 accounts, AEs target 100 accounts.
+- **Target pool size per rep**: use the targets in the table above by default (BDR = 250, AE = 100).
 
 If new reps are mentioned without targets, ask for their target. Don't assume.
 
@@ -45,6 +56,8 @@ If new reps are mentioned without targets, ask for their target. Don't assume.
 Call `HubSpot:search_owners` with each rep's first name (or full name). Capture the `ownerId` for each.
 
 If a name returns 0 results, try variations (last name, first name only, full name without accents). If still nothing, flag it to the user.
+
+For reps already given by **owner ID** (the AEs in the Step 1 default table), do the reverse: look them up in `HubSpot:search_owners` to capture their display name for the brief table. Don't re-resolve their ID.
 
 ### Step 3 — Count current "Propriétaire Prospection" stock per rep
 

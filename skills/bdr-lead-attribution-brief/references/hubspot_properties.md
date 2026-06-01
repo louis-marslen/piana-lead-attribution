@@ -37,10 +37,16 @@ Property names and quirks specific to Piana's HubSpot setup. Always use these ex
 - **`HAS_PROPERTY` / `NOT_HAS_PROPERTY`** don't take a `value` field. Check property presence.
 - **`IN` operator** uses `values` (array), not `value` (single).
 
-## Owner IDs (current Piana BDRs at time of skill creation)
+## Owner IDs (current Piana sales reps)
 
+BDRs (target 250):
 - Adam Gruat: `33334662`
 - Nathan dellasantina: `33371638`
 - Rayane Sellal: `32501903`
 
-Always re-fetch via `HubSpot:search_owners` — these can change if a BDR is replaced.
+AEs (target 100, also do prospecting — added 2026-06-01):
+- Antoine Boccandé: `29804809`
+- Déborah Kaise: `30154968`
+- Djémaël Remion: `29506540`
+
+Always re-fetch via `HubSpot:search_owners` — these can change if a rep is replaced.
