@@ -114,35 +114,39 @@ For each candidate bucket, call `HubSpot:search_crm_objects` on `companies` with
 
 **HubSpot caps at 6 filters per filterGroup**, so pick the 6 most impactful from the master list + bucket filters.
 
-For **national buckets** (no dept filter) — 6 filters:
+The 6 filters are chosen to track the real list as faithfully as the 6-filter cap allows — in particular `data___calc__nb_vehicles HAS_PROPERTY` is the single most impactful filter (sparse on low-fleet NAF segments like social action / cleaning), so it stays in every pre-check.
+
+For **national buckets** (no dept filter) — 6 filters (NAF + 5):
 ```
 filterGroups: [{ filters: [
   { propertyName: "libelle_code_naf", operator: "EQ", value: "<naf>" },
-  { propertyName: "ready_tbc", operator: "EQ", value: "1" },
   { propertyName: "proprietaire_prospection", operator: "NOT_HAS_PROPERTY" },
-  { propertyName: "statut_de_prospection", operator: "NOT_HAS_PROPERTY" },
-  { propertyName: "siret_2", operator: "HAS_PROPERTY" },
-  { propertyName: "num_associated_deals", operator: "NOT_HAS_PROPERTY" }
+  { propertyName: "num_associated_deals", operator: "NOT_HAS_PROPERTY" },
+  { propertyName: "data___calc__nb_vehicles", operator: "HAS_PROPERTY" },
+  { propertyName: "ready_tbc", operator: "HAS_PROPERTY" },
+  { propertyName: "groupe_verrouille_pour", operator: "NOT_HAS_PROPERTY" }
 ] }]
 limit: 1
 ```
 
-For **geo buckets** (with dept filter) — 6 filters:
+For **geo buckets** (with dept filter) — 6 filters (NAF + dept + 4, drop `ready_tbc` to make room):
 ```
 filterGroups: [{ filters: [
   { propertyName: "libelle_code_naf", operator: "EQ", value: "<naf>" },
   { propertyName: "departement_code", operator: "IN", values: [<depts>] },
-  { propertyName: "ready_tbc", operator: "EQ", value: "1" },
   { propertyName: "proprietaire_prospection", operator: "NOT_HAS_PROPERTY" },
-  { propertyName: "statut_de_prospection", operator: "NOT_HAS_PROPERTY" },
-  { propertyName: "siret_2", operator: "HAS_PROPERTY" }
+  { propertyName: "num_associated_deals", operator: "NOT_HAS_PROPERTY" },
+  { propertyName: "data___calc__nb_vehicles", operator: "HAS_PROPERTY" },
+  { propertyName: "groupe_verrouille_pour", operator: "NOT_HAS_PROPERTY" }
 ] }]
 limit: 1
 ```
 
 Read the `total`. This is the bucket's estimated volume.
 
-**Note:** The pre-check still omits some master filters (address/city/zip IS_KNOWN, company_nb_open_leads < 1) due to the 6-filter limit, so volumes will be slightly overestimated (~10-20%). This is expected.
+**Notes:**
+- `num_associated_deals NOT_HAS_PROPERTY` is the Search proxy for "< 1 ou vide" — per the property reference, 0-deal companies are always unknown, so this captures them. Search can't express "< 1 OR empty" as a single OR within an AND group.
+- The pre-check still omits master filters NOT in the 6 (the real list keeps its full 10): `statut_de_prospection`, `siret_2`, `address`, `zip`, `city`, `company_nb_open_leads < 1`, and the stricter `ready_tbc = 1`. So the estimate stays approximate and slightly above the real size — but much closer than before now that `data___calc__nb_vehicles` is included. The real number always comes from Step 10d.
 
 ### Step 9 — Select the minimal set of buckets reaching ~1.5× the target
 
