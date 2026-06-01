@@ -146,7 +146,7 @@ Read the `total`. This is the bucket's estimated volume.
 
 **Notes:**
 - `num_associated_deals NOT_HAS_PROPERTY` is the Search proxy for "< 1 ou vide" — per the property reference, 0-deal companies are always unknown, so this captures them. Search can't express "< 1 OR empty" as a single OR within an AND group.
-- The pre-check still omits master filters NOT in the 6 (the real list keeps its full 10): `statut_de_prospection`, `siret_2`, `address`, `zip`, `city`, `company_nb_open_leads < 1`, and the stricter `ready_tbc = 1`. So the estimate stays approximate and slightly above the real size — but much closer than before now that `data___calc__nb_vehicles` is included. The real number always comes from Step 10d.
+- The pre-check still omits master filters NOT in the 6 (the real list applies the full master, fetched live in Step 10a): `statut_de_prospection`, `siret_2`, `address`, `zip`, `city`, `company_nb_open_leads < 1`, and the stricter `ready_tbc = 1`. So the estimate stays approximate and slightly above the real size — but much closer than before now that `data___calc__nb_vehicles` is included. The real number always comes from Step 10d.
 
 ### Step 9 — Select the minimal set of buckets reaching ~1.5× the target
 
@@ -164,22 +164,18 @@ Create the list by calling the HubSpot Lists API directly via `WebFetch`. No loc
 
 The list uses a DNF (OR of ANDs) structure: `master_filters AND bucket_filters` for each bucket, OR'd together.
 
-The master filters (AND'd) — use these EXACT JSON objects, do NOT change the operationType values:
+**Get the master filters live — do NOT hardcode them.** The master list `3584` is the single source of truth: GET it and reuse its filters, so any filter the user adds/removes in HubSpot (e.g. `groupe_verrouille_pour`) is automatically reflected, and the skill stays consistent with `push_list.py`.
 
-```json
-[
-  {"filterType":"PROPERTY","property":"proprietaire_prospection","operation":{"operator":"IS_UNKNOWN","operationType":"ALL_PROPERTY","includeObjectsWithNoValueSet":false}},
-  {"filterType":"PROPERTY","property":"statut_de_prospection","operation":{"operator":"IS_UNKNOWN","operationType":"ALL_PROPERTY","includeObjectsWithNoValueSet":false}},
-  {"filterType":"PROPERTY","property":"siret_2","operation":{"operator":"IS_KNOWN","operationType":"ALL_PROPERTY","includeObjectsWithNoValueSet":false}},
-  {"filterType":"PROPERTY","property":"address","operation":{"operator":"IS_KNOWN","operationType":"ALL_PROPERTY","includeObjectsWithNoValueSet":false}},
-  {"filterType":"PROPERTY","property":"city","operation":{"operator":"IS_KNOWN","operationType":"ALL_PROPERTY","includeObjectsWithNoValueSet":false}},
-  {"filterType":"PROPERTY","property":"zip","operation":{"operator":"IS_KNOWN","operationType":"ALL_PROPERTY","includeObjectsWithNoValueSet":false}},
-  {"filterType":"PROPERTY","property":"data___calc__nb_vehicles","operation":{"operator":"IS_KNOWN","operationType":"ALL_PROPERTY","includeObjectsWithNoValueSet":false}},
-  {"filterType":"PROPERTY","property":"ready_tbc","operation":{"operator":"IS_EQUAL_TO","operationType":"NUMBER","value":1.0,"includeObjectsWithNoValueSet":false}},
-  {"filterType":"PROPERTY","property":"company_nb_open_leads","operation":{"operator":"IS_LESS_THAN","operationType":"NUMBER","value":1.0,"includeObjectsWithNoValueSet":true}},
-  {"filterType":"PROPERTY","property":"num_associated_deals","operation":{"operator":"IS_LESS_THAN","operationType":"NUMBER","value":1.0,"includeObjectsWithNoValueSet":true}}
-]
 ```
+GET https://api.hubapi.com/crm/v3/lists/3584
+Authorization: Bearer <HUBSPOT_TOKEN>
+```
+
+From the response, read `list.filterBranch`. The master is a single AND group, so take its leaf filters:
+- `master_filters = filterBranch.filterBranches[0].filters` if `filterBranch` is an OR/AND wrapper with one AND child, **or** `filterBranch.filters` if the filters sit directly on the root AND branch. Inspect the structure and grab the array of `{filterType, property, operation}` objects.
+- Use these objects **verbatim** (do not alter their `operationType`/`operator` values — they carry Piana-specific quirks like MULTISTRING IS_EQUAL_TO and ALL_PROPERTY IS_KNOWN).
+
+For reference, the master currently contains ~11 filters (proprietaire_prospection IS_UNKNOWN, statut_de_prospection IS_UNKNOWN, siret_2/address/city/zip/data___calc__nb_vehicles IS_KNOWN, ready_tbc IS_EQUAL_TO 1, company_nb_open_leads IS_LESS_THAN 1, num_associated_deals IS_LESS_THAN 1, groupe_verrouille_pour IS_UNKNOWN) — but **always use what the live GET returns**, not this list. If the GET fails, fall back to the reference filters above and flag it in the brief.
 
 For each bucket, append these filters to the master array:
 - NAF filter: `{"filterType":"PROPERTY","property":"libelle_code_naf","operation":{"operator":"IS_EQUAL_TO","operationType":"MULTISTRING","values":["<exact libellé>"],"includeObjectsWithNoValueSet":false}}`
